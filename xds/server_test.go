@@ -34,10 +34,10 @@ import (
 	"google.golang.org/grpc/credentials/xds"
 	"google.golang.org/grpc/internal/grpctest"
 	"google.golang.org/grpc/internal/testutils"
-	xdsclient "google.golang.org/grpc/xds/internal/client"
-	"google.golang.org/grpc/xds/internal/client/bootstrap"
-	xdstestutils "google.golang.org/grpc/xds/internal/testutils"
-	"google.golang.org/grpc/xds/internal/testutils/fakeclient"
+	xdsclient "google.golang.org/grpc/xds/pkg/client"
+	"google.golang.org/grpc/xds/pkg/client/bootstrap"
+	xdstestutils "google.golang.org/grpc/xds/pkg/testutils"
+	"google.golang.org/grpc/xds/pkg/testutils/fakeclient"
 )
 
 const (

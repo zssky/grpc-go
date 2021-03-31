@@ -38,9 +38,9 @@ import (
 	"google.golang.org/grpc/internal/xds/env"
 	"google.golang.org/grpc/resolver"
 	_ "google.golang.org/grpc/xds" // To register xds resolvers and balancers.
-	xdsclient "google.golang.org/grpc/xds/internal/client"
-	"google.golang.org/grpc/xds/internal/client/bootstrap"
-	"google.golang.org/grpc/xds/internal/version"
+	xdsclient "google.golang.org/grpc/xds/pkg/client"
+	"google.golang.org/grpc/xds/pkg/client/bootstrap"
+	"google.golang.org/grpc/xds/pkg/version"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -49,8 +49,8 @@ const (
 
 	tdURL          = "directpath-trafficdirector.googleapis.com"
 	httpReqTimeout = 10 * time.Second
-	zoneURL        = "http://metadata.google.internal/computeMetadata/v1/instance/zone"
-	ipv6URL        = "http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/ipv6s"
+	zoneURL        = "http://metadata.google.pkg/computeMetadata/v1/instance/zone"
+	ipv6URL        = "http://metadata.google.pkg/computeMetadata/v1/instance/network-interfaces/0/ipv6s"
 
 	gRPCUserAgentName               = "gRPC Go"
 	clientFeatureNoOverprovisioning = "envoy.lb.does_not_support_overprovisioning"

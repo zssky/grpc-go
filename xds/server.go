@@ -32,9 +32,9 @@ import (
 	"google.golang.org/grpc/internal"
 	internalgrpclog "google.golang.org/grpc/internal/grpclog"
 	"google.golang.org/grpc/internal/grpcsync"
-	xdsclient "google.golang.org/grpc/xds/internal/client"
-	"google.golang.org/grpc/xds/internal/client/bootstrap"
-	"google.golang.org/grpc/xds/internal/server"
+	xdsclient "google.golang.org/grpc/xds/pkg/client"
+	"google.golang.org/grpc/xds/pkg/client/bootstrap"
+	"google.golang.org/grpc/xds/pkg/server"
 )
 
 const serverPrefix = "[xds-server %p] "
@@ -120,7 +120,7 @@ func NewGRPCServer(opts ...grpc.ServerOption) *GRPCServer {
 	// We type assert our underlying gRPC server to the real grpc.Server here
 	// before trying to retrieve the configured credentials. This approach
 	// avoids performing the same type assertion in the grpc package which
-	// provides the implementation for internal.GetServerCredentials, and allows
+	// provides the implementation for pkg.GetServerCredentials, and allows
 	// us to use a fake gRPC server in tests.
 	if gs, ok := s.gs.(*grpc.Server); ok {
 		creds := grpcGetServerCreds(gs)
