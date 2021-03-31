@@ -38,12 +38,12 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
-	"google.golang.org/grpc/xds/internal/client"
-	"google.golang.org/grpc/xds/internal/client/bootstrap"
+	"google.golang.org/grpc/xds/pkg/client"
+	"google.golang.org/grpc/xds/pkg/client/bootstrap"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	_ "google.golang.org/grpc/xds/internal/client/v2" // Register v2 xds_client.
-	_ "google.golang.org/grpc/xds/internal/client/v3" // Register v3 xds_client.
+	_ "google.golang.org/grpc/xds/pkg/client/v2" // Register v2 xds_client.
+	_ "google.golang.org/grpc/xds/pkg/client/v3" // Register v3 xds_client.
 )
 
 // xdsClientInterface contains methods from xdsClient.Client which are used by

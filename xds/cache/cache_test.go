@@ -1,26 +1,10 @@
-/*
- *
- * Copyright 2021 gRPC authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-
-package csds
+package cache
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"google.golang.org/grpc/xds/csds"
 	"strings"
 	"testing"
 	"time"
@@ -42,9 +26,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	v3adminpb "github.com/envoyproxy/go-control-plane/envoy/admin/v3"
-	v2corepb "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	v3clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
-	v3corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	v3endpointpb "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	v3listenerpb "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	v3routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
@@ -163,7 +145,7 @@ func init() {
 	}
 }
 
-func TestCSDS(t *testing.T) {
+func TestClientCache(t *testing.T) {
 	const retryCount = 10
 
 	xdsC, mgmServer, nodeID, stream, cleanup := commonSetup(t)
@@ -244,7 +226,57 @@ func TestCSDS(t *testing.T) {
 		}
 		time.Sleep(time.Millisecond * 100)
 	}
+
+	cc, err := NewClientConfigCache()
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	cache, err := cc.FetchAll()
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	data, err := json.Marshal(cache)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	t.Logf("%s", string(data))
+
+	l, err := cache.FindListenerByName(ldsTargets[0])
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	t.Logf("%+v", l)
+
+	r, err := cache.FindRouteByName(rdsTargets[0])
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	t.Logf("%+v", r)
+
+	c, err := cache.FindClusterByName(cdsTargets[0])
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	t.Logf("%v+v", c)
+
+	e, err := cache.FindEndpointsByName(edsTargets[0])
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	t.Logf("%+v", e)
+
+	le, err := cache.FindEndpointsByListenerName(ldsTargets[0])
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	t.Logf("%+v", le)
 }
+
+
 
 func commonSetup(t *testing.T) (xdsClientInterfaceWithWatch, *e2e.ManagementServer, string, v3statuspb.ClientStatusDiscoveryService_StreamClientStatusClient, func()) {
 	t.Helper()
@@ -277,7 +309,7 @@ func commonSetup(t *testing.T) (xdsClientInterfaceWithWatch, *e2e.ManagementServ
 
 	// Initialize an gRPC server and register CSDS on it.
 	server := grpc.NewServer()
-	csdss, err := NewClientStatusDiscoveryServer()
+	csdss, err := csds.NewClientStatusDiscoveryServer()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -632,55 +664,3 @@ func protoToJSON(p proto.Message) string {
 	return ret
 }
 
-func Test_nodeProtoToV3(t *testing.T) {
-	const (
-		testID      = "test-id"
-		testCluster = "test-cluster"
-		testZone    = "test-zone"
-	)
-	tests := []struct {
-		name string
-		n    proto.Message
-		want *v3corepb.Node
-	}{
-		{
-			name: "v3",
-			n: &v3corepb.Node{
-				Id:       testID,
-				Cluster:  testCluster,
-				Locality: &v3corepb.Locality{Zone: testZone},
-			},
-			want: &v3corepb.Node{
-				Id:       testID,
-				Cluster:  testCluster,
-				Locality: &v3corepb.Locality{Zone: testZone},
-			},
-		},
-		{
-			name: "v2",
-			n: &v2corepb.Node{
-				Id:       testID,
-				Cluster:  testCluster,
-				Locality: &v2corepb.Locality{Zone: testZone},
-			},
-			want: &v3corepb.Node{
-				Id:       testID,
-				Cluster:  testCluster,
-				Locality: &v3corepb.Locality{Zone: testZone},
-			},
-		},
-		{
-			name: "not node",
-			n:    &v2corepb.Locality{Zone: testZone},
-			want: nil, // Input is not a node, should return nil.
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := nodeProtoToV3(tt.n)
-			if diff := cmp.Diff(got, tt.want, protocmp.Transform()); diff != "" {
-				t.Errorf("nodeProtoToV3() got unexpected result, diff (-got, +want): %v", diff)
-			}
-		})
-	}
-}
